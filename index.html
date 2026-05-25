@@ -82,9 +82,22 @@
     <script>
         const data = [
             { url: 'https://rentalia.com.tr/media/adana-blog/simit-selalesi-adana-gezilecek-yerler.jpg', title: 'Simit Şelalesi', desc: 'Adana’nın Aladağ ilçesinde yer alan, el değmemiş doğası ve turkuaz sularıyla bilinen saklı bir cennettir.' },
-            { url: 'https://trthaberstatic.cdn.wp.trt.com.tr/resimler/2210000/adana-sabanci-merkez-cami-aa-2211520.jpg', title: 'Sabancı Merkez Camii', desc: 'Adana’nın simgesi haline gelmiş, Türkiye ve Orta Doğu’nun en büyük camilerinden biridir.' }
+            { url: 'https://rentalia.com.tr/media/adana-blog/dagilcak-mesire-alani-adana-gezilecek-yerler.jpg', title: 'Dağılcak Mesire Alanı', desc: 'Adana’nın Kozan ilçesinde yer alan, doğası ve buz gibi akan suyuyla bilinen popüler bir dinlenme alanıdır.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/akyatan-golu-milli-parki-adana.jpg', title: 'Akyatan Gölü', desc: 'Türkiye’nin en büyük lagün gölüdür ve uluslararası öneme sahip bir sulak alandır.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/kup-selaleleri-adana-gezilecek-yerler.jpg', title: 'Küp Şelaleleri', desc: 'Adana’nın Aladağ ilçesinde bulunan ve yaklaşık 10 farklı şelaleden oluşan doğal bir güzelliktir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/dokuzoluk-kanyonu-adana-gezilecek-yerler.jpg', title: 'Dokuzoluk Kanyonu', desc: 'Adana’nın Karaisalı ilçesinde, Merkezboztahta Köyü sınırlarında yer alan bir doğa harikasıdır.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/korkun-kanyonu-adana-gezilecek-yerler.jpg', title: 'Körkün Kanyonu', desc: 'Adana’nın Karaisalı ilçesinde yer alan Körkün Kanyonu, buz gibi suyu ve el değmemiş doğasıyla bilinen saklı bir cennettir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/sar-oren-yeri-adana-gezilecek-yerler.jpg', title: 'Şar Antik Kenti', desc: 'Adana’nın en kuzey ucunda, Tufanbeyli ilçesinde yer alan, Hititlerden Roma ve Bizans dönemlerine kadar kesintisiz yerleşim görmüş önemli bir merkezdir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/misis-mozaik-muzesi-adana-gezilecek-yerler.jpg', title: 'Misis Antik Kenti', desc: 'Adana’nın Yüreğir ilçesinde, Ceyhan Nehri kıyısında yer alan ve kazıların hala devam ettiği tarihi bir yerleşimdir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/magarsus-antik-kenti-adana-gezilecek-yerler.jpg', title: 'Magarsus Antik Kenti', desc: 'Adana’nın Karataş ilçesinde denize nazır bir yamaçta yükselen, Kilikya bölgesinin en köklü yerleşimlerinden biridir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/feke-kalesi-adana-gezilecek-yerler.jpg', title: 'Feke Kalesi', desc: 'Adana’nın Feke ilçesinde yer alan, İpek Yolu’nu kontrol etmek amacıyla sarp kayalıklara inşa edilmiş tarihi bir yapıdır.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/catalan-koprusu-adana-gezilecek-yerler.jpg', title: 'Çatalan Köprüsü', desc: 'Adana’nın kuzeyinde yer alan Çatalan Köprüsü, Seyhan Baraj Gölü üzerinde kurulu bir simge yapıdır.' },
+            { url: 'https://trthaberstatic.cdn.wp.trt.com.tr/resimler/2210000/adana-sabanci-merkez-cami-aa-2211520.jpg', title: 'Sabancı Merkez Camii', desc: 'Adana’nın simgesi haline gelmiş, Türkiye ve Orta Doğu’nun en büyük camilerinden biridir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/buyuksaat-adana-gezilecek-yerler.jpg', title: 'Büyüksaat', desc: 'Adana’nın simgesi olan Büyük Saat Kulesi, 32 metrelik uzunluğuyla Türkiye’nin en yüksek saat kulesidir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/yilankale-adana-gezilecek-yerler.jpg', title: 'Yılankale', desc: 'Adana’nın Ceyhan ilçesinde, Ceyhan Ovası’na hakim sarp kayalık bir tepe üzerinde yer alan Orta Çağ kalesidir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/varda-koprusu-adana-gezilecek-yerler.jpg', title: 'Varda Köprüsü', desc: 'Adana’nın Karaisalı ilçesinde yer alan, 1912 yılında tamamlanmış devasa bir demiryolu viyadüğüdür.' },
+            { url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTE1RO4evkCeGeAHj_4wUPHiujj76UKnO96EQ&s', title: 'Taş Köprü', desc: 'Adana Taşköprü, Seyhan Nehri üzerinde yer alan ve dünyanın halen kullanılan en eski köprüsü olarak kabul edilir.' },
         ];
-
         function changeBg() {
             const loc = data[Math.floor(Math.random() * data.length)];
             document.getElementById('bg-container').style.backgroundImage = `url('${loc.url}')`;
