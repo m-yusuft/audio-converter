@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AudioConvert</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #020202; color: #fff; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .btn-glass { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); transition: 0.3s; }
+        .btn-glass:hover { background: rgba(255, 255, 255, 0.2); }
+        .btn-glass:disabled { opacity: 0.3; cursor: not-allowed; }
+        .list-container { max-height: 400px; overflow-y: auto; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        
+        /* Panel animasyonu */
+        #info-panel { 
+            transition: opacity 0.4s ease, transform 0.4s ease; 
+            opacity: 0; transform: translateY(-10px); pointer-events: none;
+        }
+        #info-panel.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    </style>
+</head>
+<body class="h-screen flex flex-col p-4 md:p-8 overflow-hidden">
+
+    <div id="bg-container" class="fixed inset-0 bg-cover bg-center -z-10 brightness-[0.3] transition-all duration-1000"></div>
+
+    <button onclick="toggleInfo()" class="fixed top-6 right-6 glass px-6 py-3 rounded-full text-sm font-bold z-50 hover:scale-105 transition-transform">Burası neresi?</button>
+    <div id="info-panel" class="fixed top-20 right-6 w-96 glass p-8 rounded-3xl z-40 hidden max-h-[80vh] overflow-y-auto shadow-2xl">
+        <h2 id="info-title" class="text-2xl font-bold mb-4 text-blue-400"></h2>
+        <p id="info-desc" class="text-sm text-zinc-300 leading-relaxed text-justify"></p>
+    </div>
+
+    <main class="flex-1 max-w-2xl mx-auto w-full flex flex-col">
+        <h1 class="text-3xl font-bold text-center mb-6 tracking-tight">Ses Dönüştürücü</h1>
+
+        <div id="drop-zone" class="glass p-6 rounded-3xl border-2 border-dashed border-white/10 text-center cursor-pointer mb-4 hover:border-blue-500/50 transition-all hover:bg-white/5 shrink-0">
+            <p class="text-sm">Ses dosyalarını buraya sürükleyin veya tıklayın</p>
+            <input type="file" id="file-input" multiple accept="audio/*" class="hidden">
+        </div>
+
+        <div id="file-list" class="list-container space-y-3 mb-4 flex-1"></div>
+
+        <div id="controls" class="grid grid-cols-3 gap-3 hidden shrink-0 pt-4 border-t border-white/10">
+            <button onclick="convertAll()" class="btn-glass py-3 rounded-xl text-sm font-bold">Tümünü Çevir</button>
+            <button id="download-all-btn" onclick="downloadAll()" class="btn-glass py-3 rounded-xl text-sm font-bold" disabled>Tümünü İndir</button>
+            <button onclick="clearAll()" class="btn-glass py-3 rounded-xl text-sm font-bold text-red-400 border-red-900/50">Tümünü Sil</button>
+        </div>
+    </main>
+
+    <script id="worker-script" type="text/javascript-worker">
+        importScripts('https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.all.min.js');
+        self.onmessage = function(e) {
+            const { audioData, id, sampleRate } = e.data;
+            try {
+                const mp3Encoder = new lamejs.Mp3Encoder(1, sampleRate, 128);
+                const mp3Data = [];
+                const samples = new Int16Array(audioData);
+                const mp3buf = mp3Encoder.encodeBuffer(samples);
+                if (mp3buf.length > 0) mp3Data.push(mp3buf);
+                const mp3buf2 = mp3Encoder.flush();
+                if (mp3buf2.length > 0) mp3Data.push(mp3buf2);
+                self.postMessage({ id, blob: new Blob(mp3Data, {type: 'audio/mp3'}), status: 'Hazır', progress: 100 });
+            } catch(e) {
+                self.postMessage({ id, status: 'Hata', progress: 0 });
+            }
+        };
+    </script>
+
+    <script>
+        const data = [
+            { url: 'https://rentalia.com.tr/media/adana-blog/simit-selalesi-adana-gezilecek-yerler.jpg', title: 'Simit Selalesi', desc: 'Adana’nın Aladağ ilçesinde yer alan, el değmemiş doğası ve turkuaz sularıyla bilinen saklı bir cennettir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/dagilcak-mesire-alani-adana-gezilecek-yerler.jpg', title: 'Dağılcak Mesire Alanı', desc: 'Adana’nın Kozan ilçesinde yer alan, doğası ve buz gibi akan suyuyla bilinen popüler bir dinlenme alanıdır.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/akyatan-golu-milli-parki-adana.jpg', title: 'Akyatan Gölü', desc: '(Akyatan Gölü veya yaygın adıyla Akyatan Kuş Cenneti), Türkiye’nin en büyük lagün gölüdür ve uluslararası öneme sahip bir sulak alandır.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/kup-selaleleri-adana-gezilecek-yerler.jpg', title: 'Küp Şelaleleri', desc: 'Adana’nın Aladağ ilçesinde bulunan ve yaklaşık 10 farklı şelaleden oluşan doğal bir güzelliktir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/dokuzoluk-kanyonu-adana-gezilecek-yerler.jpg', title: 'Dokuzoluk Kanyonu', desc: 'Adana’nın Karaisalı ilçesinde, Merkezboztahta Köyü sınırlarında yer alan bir doğa harikasıdır.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/korkun-kanyonu-adana-gezilecek-yerler.jpg', title: 'Körkün Kanyonu', desc: 'Adana’nın Karaisalı ilçesinde yer alan Körkün Kanyonu, buz gibi suyu ve el değmemiş doğasıyla bilinen saklı bir cennettir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/sar-oren-yeri-adana-gezilecek-yerler.jpg', title: 'Şar Antik Kenti', desc: 'Adana’nın en kuzey ucunda, Tufanbeyli ilçesinde yer alan Şar Antik Kenti (antik adıyla Comana), Hititlerden Roma ve Bizans dönemlerine kadar kesintisiz yerleşim görmüş, Anadolu’nun en önemli inanç merkezlerinden biridir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/misis-mozaik-muzesi-adana-gezilecek-yerler.jpg', title: 'Misis Mozaik Müzesi & Misis Antik Kenti', desc: 'Misis Mozaik Müzesi artık kapalıdır ve içindeki tüm eserler Adana Arkeoloji Müzesi’ne taşınmıştır. Antik kentin kendisi ise Adana’nın Yüreğir ilçesinde, Ceyhan Nehri kıyısında yer alan ve kazıların hala devam ettiği tarihi bir yerleşimdir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/magarsus-antik-kenti-adana-gezilecek-yerler.jpg', title: 'Magarsus Antik Kenti', desc: 'Magarsus Antik Kenti, Adana’nın Karataş ilçesinde denize nazır bir yamaçta yükselen, Kilikya bölgesinin en köklü yerleşimlerinden biridir. Tarihi M.Ö. 7. yüzyıla kadar uzanan bu liman kenti, özellikle Büyük İskender’in Issos Savaşı öncesinde kurban kestiği söylenen Athena Magarsia Tapınağı ile antik dünyanın önemli bir dini merkezi haline gelmiştir. Günümüze ulaşan en etkileyici yapısı olan 3 bin kişilik antik tiyatrosu, izleyicilere uçsuz bucaksız bir Akdeniz manzarası sunar.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/feke-kalesi-adana-gezilecek-yerler.jpg', title: 'Feke Kalesi & Karakilise', desc: 'Adana’nın Feke ilçesinde yer alan Feke Kalesi ve Karakilise, İpek Yolu’nu kontrol etmek amacıyla sarp kayalıklara inşa edilmiş, Orta Çağ atmosferini günümüze taşıyan iki önemli tarihi yapıdır.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/catalan-koprusu-adana-gezilecek-yerler.jpg', title: 'Çatalan Köprüsü & Seyhan Barajı Gölü', desc: 'Adana’nın kuzeyinde yer alan Çatalan Köprüsü, Seyhan Baraj Gölü üzerinde kurulu, hem ulaşım hem de mühendislik açısından şehrin simge yapılarından biridir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/anavarza-kalesi-adana-gezilecek-yerler.jpg', title: 'Anavarza Antik Kenti', desc: 'Anavarza Antik Kenti, Adana’nın Kozan ilçesinde (Dilekkaya Köyü) yer alan, UNESCO Dünya Miras Geçici Listesi’ndeki devasa bir yerleşimdir.' },
+            { url: 'https://trthaberstatic.cdn.wp.trt.com.tr/resimler/2210000/adana-sabanci-merkez-cami-aa-2211520.jpg', title: 'Sabancı Merkez Camii ', desc: 'Sabancı Merkez Camii, Adana’nın simgesi haline gelmiş, Türkiye ve Orta Doğu’nun en büyük camilerinden biridir. Seyhan Nehri kıyısında, Merkez Park’ın hemen güneyinde yer alan bu görkemli yapı, 1998 yılında ibadete açılmıştır.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/buyuksaat-adana-gezilecek-yerler.jpg', title: 'Büyüksaat ', desc: 'Adana’nın simgesi olan Büyük Saat Kulesi, 32 metrelik uzunluğuyla Türkiye’nin en yüksek saat kulesidir. Şehrin tarihi dokusunun merkezinde, Seyhan ilçesinde yer alır.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/yilankale-adana-gezilecek-yerler.jpg', title: 'Yılankale ', desc: 'Yılan Kalesi (Şahmeran Kalesi), Adana’nın Ceyhan ilçesinde, Ceyhan Ovası’na hakim sarp kayalık bir tepe üzerinde yer alan tarihi bir Orta Çağ kalesidir.' },
+            { url: 'https://rentalia.com.tr/media/adana-blog/varda-koprusu-adana-gezilecek-yerler.jpg', title: 'Varda Köprüsü', desc: 'Varda Köprüsü (veya halk arasındaki adıyla Alman Köprüsü), Adana’nın Karaisalı ilçesinde yer alan, 1912 yılında tamamlanmış devasa bir demiryolu viyadüğüdür.' },
+            { url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTE1RO4evkCeGeAHj_4wUPHiujj76UKnO96EQ&s', title: 'Taş Köprü', desc: 'Adana Taşköprü, Seyhan Nehri üzerinde yer alan ve dünyanın halen kullanılan en eski köprüsü olarak kabul edilen tarihi bir yapıdır.' },
+        ];
+
+        function changeBg() {
+            const loc = data[Math.floor(Math.random() * data.length)];
+            document.getElementById('bg-container').style.backgroundImage = `url('${loc.url}')`;
+            document.getElementById('info-title').innerText = loc.title;
+            document.getElementById('info-desc').innerText = loc.desc;
+        }
+        changeBg();
+        
+        function toggleInfo() {
+            const panel = document.getElementById('info-panel');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                setTimeout(() => panel.classList.add('show'), 10);
+            } else {
+                panel.classList.remove('show');
+                setTimeout(() => panel.classList.add('hidden'), 400);
+            }
+        }
+
+        const workerBlob = new Blob([document.getElementById('worker-script').textContent], {type: 'text/javascript'});
+        const worker = new Worker(URL.createObjectURL(workerBlob));
+        let queue = [];
+
+        worker.onmessage = (e) => {
+            const item = queue.find(i => i.id === e.data.id);
+            if(item) { item.blob = e.data.blob; item.status = e.data.status; item.progress = e.data.progress; render(); }
+        };
+
+        async function processFile(item) {
+            item.status = 'İşleniyor'; item.progress = 30; render();
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const arrayBuffer = await item.file.arrayBuffer();
+            const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+            item.progress = 70; render();
+            const pcmData = audioBuffer.getChannelData(0).map(s => s * 32767);
+            worker.postMessage({ id: item.id, audioData: new Int16Array(pcmData).buffer, sampleRate: audioBuffer.sampleRate }, [new Int16Array(pcmData).buffer]);
+        }
+
+        function render() {
+            const list = document.getElementById('file-list');
+            const downloadAllBtn = document.getElementById('download-all-btn');
+            
+            document.getElementById('controls').classList.toggle('hidden', queue.length === 0);
+            
+            const allReady = queue.length > 0 && queue.every(i => i.status === 'Hazır');
+            downloadAllBtn.disabled = !allReady;
+
+            list.innerHTML = queue.map(i => `
+                <div class="glass p-3 rounded-2xl animate-in fade-in zoom-in duration-300">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs truncate max-w-[120px]">${i.file.name}</span>
+                        <div class="flex gap-1">
+                            ${i.status === 'Bekliyor' ? `<button onclick="startConvert(${i.id})" class="btn-glass px-2 py-1 rounded-md text-[10px]">Çevir</button>` : i.status === 'Hazır' ? `<button onclick="download(${i.id})" class="btn-glass px-2 py-1 rounded-md text-[10px] text-emerald-400">İndir</button>` : `<span class="text-[10px] text-yellow-500">${i.status}</span>`}
+                            <button onclick="remove(${i.id})" class="btn-glass px-2 py-1 rounded-md text-[10px] text-red-400">Sil</button>
+                        </div>
+                    </div>
+                    <div class="w-full bg-black/30 rounded-full h-1 overflow-hidden"><div class="bg-blue-500 h-1 rounded-full transition-all duration-300" style="width: ${i.progress || 0}%"></div></div>
+                </div>
+            `).join('');
+        }
+
+        async function startConvert(id) {
+            const item = queue.find(i => i.id === id);
+            if(item) await processFile(item);
+        }
+
+        document.getElementById('drop-zone').onclick = () => document.getElementById('file-input').click();
+        document.getElementById('file-input').onchange = (e) => {
+            Array.from(e.target.files).forEach(f => queue.push({ id: Date.now()+Math.random(), file: f, status: 'Bekliyor', progress: 0, blob: null }));
+            render();
+        };
+
+        function convertAll() { queue.filter(i => i.status === 'Bekliyor').forEach(i => startConvert(i.id)); }
+        function download(id) { const item = queue.find(i => i.id === id); if(item?.blob) { const a = document.createElement('a'); a.href = URL.createObjectURL(item.blob); a.download = item.file.name.replace(/\.[^/.]+$/, "") + ".mp3"; a.click(); } }
+        function downloadAll() { queue.forEach(i => { if(i.blob) download(i.id); }); }
+        function remove(id) { queue = queue.filter(i => i.id !== id); render(); }
+        function clearAll() { queue = []; render(); }
+    </script>
+</body>
+</html>
